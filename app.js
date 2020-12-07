@@ -77,6 +77,11 @@ app.post('/upload', (req, res) => {
 
 });
 
+app.get('/download/:path', (req, res) => {
+    var path = __dirname + '/public/' + req.params.path;
+    res.download(path);
+})
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
     next(createError(404));
