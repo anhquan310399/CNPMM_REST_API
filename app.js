@@ -4,8 +4,6 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require("cors");
-const multer = require('multer');
-const GridFsStorage = require('multer-gridfs-storage');
 const fileUpload = require('express-fileupload');
 
 var usersRouter = require('./src/routes/userRouter');
@@ -16,6 +14,24 @@ const mongoose = require("mongoose");
 
 var app = express();
 mongoose.Promise = global.Promise;
+//Set up muler
+var multer = require('multer');
+var storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        cb(null, './uploads/')
+    },
+    filename: function(req, file, cb) {
+        cb(null, file.originalname)
+    }
+})
+
+
+var upload = multer().single('file')
+
+//**THIS IS MANDATORY, WITHOUT THIS NOT WORK**
+app.use(multer({
+    storage: storage
+}).single('file'));
 
 // enable files upload
 app.use(fileUpload({
@@ -31,19 +47,35 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+//Firebase 
 
-app.use('/users', usersRouter);
+// Connecting to the database
+mongoose
+    .connect(dbConfig, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    })
+    .then(() => {
+        console.log("Successfully connected to the database");
+    })
+    .catch((err) => {
+        console.log("Could not connect to the database. Exiting now...", err);
+        process.exit();
+    });
 
+app.use('/user', usersRouter);
 
+app.post('/upload', (req, res) => {
+    console.log(req.file);
+    upload(req, res, function(err) {
+        if (err) {
+            res.status(500).json({ 'success': false });
+            return;
+        }
+        res.send(req.file);
+    });
 
-var route = express.Router();
-route.post('/', (req, res) => {
-    let file = req.files.file;
-    console.log(file);
-    res.send(file);
-    //upload.single(file);
 });
-app.use('/upload', route);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -59,42 +91,6 @@ app.use(function(err, req, res, next) {
     // render the error page
     res.status(err.status || 500);
     res.render('error');
-});
-
-let gfs;
-// Connecting to the database
-mongoose
-    .connect(dbConfig, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-    })
-    .then(() => {
-        console.log("Successfully connected to the database");
-        gfs = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
-            bucketName: 'uploads',
-        });
-    })
-    .catch((err) => {
-        console.log("Could not connect to the database. Exiting now...", err);
-        process.exit();
-    });
-
-const storage = new GridFsStorage({
-    url: dbConfig,
-    file: (req, file) => {
-        return new Promise((resolve, reject) => {
-            const filename = file.originalname;
-            const fileInfo = {
-                filename: filename,
-                bucketName: 'uploads',
-            };
-            resolve(fileInfo);
-        });
-    },
-});
-
-const upload = multer({
-    storage,
 });
 
 module.exports = app;
