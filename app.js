@@ -40,7 +40,7 @@ app.use(fileUpload({
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
-app.use(express.static(__dirname + '/dist/cnpmm-rest-api'));
+app.use(express.static('uploads'));
 app.use(cors());
 app.use(logger('dev'));
 app.use(express.json());
