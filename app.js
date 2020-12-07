@@ -78,7 +78,8 @@ app.post('/upload', (req, res) => {
 });
 
 app.get('/download/:path', (req, res) => {
-    var path = __dirname + '/public/' + req.params.path;
+    console.log(req.params.path);
+    var path = __dirname + '/uploads/' + req.params.path;
     res.download(path);
 })
 
