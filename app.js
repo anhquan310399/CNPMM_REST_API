@@ -12,7 +12,6 @@ global.appRoot = path.resolve(__dirname);
 //Database
 const dbConfig = process.env.MONGODB_URL;
 const mongoose = require("mongoose");
-const { resolve } = require('path');
 
 var app = express();
 mongoose.Promise = global.Promise;
@@ -55,8 +54,8 @@ app.use('/', upload);
 
 app.get('/download/:path', (req, res) => {
     console.log(req.params.path);
-    var path = path.join(__dirname, '\\uploads\\subject\\NguyenAnhQuan.jpg');
-    res.download(path);
+    var realpath = path.join(__dirname, '\\uploads\\subject\\NguyenAnhQuan.jpg');
+    res.download(realpath);
 })
 
 // catch 404 and forward to error handler
