@@ -54,7 +54,7 @@ app.use('/', upload);
 
 app.get('/download/:path', (req, res) => {
     console.log(req.params.path);
-    var realpath = path.join(__dirname, '\\uploads\\subject\\NguyenAnhQuan.jpg');
+    var realpath = path.join(__dirname, 'uploads/subject/NguyenAnhQuan.jpg');
     res.download(realpath);
 })
 
