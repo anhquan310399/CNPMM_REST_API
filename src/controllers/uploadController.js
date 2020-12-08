@@ -15,16 +15,37 @@ var storage = multer.diskStorage({
         cb(null, file.originalname)
     }
 });
-var upload = multer({ storage: storage });
-// Export routes
+var upload = multer({
+    storage: storage,
+    limits: { fileSize: 30 * 1024 * 1024, }
+}).single('file');
+// //Export routes
+// module.exports = function(app, router) {
+//     router.post('/fileupload', upload.single('file'), (req, res, next) => {
+//         console.log(req.file);
+//         let realPath = path.join(appRoot, req.file.path);
+//         console.log(realPath);
+//         res.status(200).send({
+//             file: req.file,
+//             path: realPath
+//         });
+//     });
+//     return router;
+// }
+
 module.exports = function(app, router) {
-    router.post('/fileupload', upload.single('file'), (req, res, next) => {
-        console.log(req.file);
-        let realPath = path.join(appRoot, req.file.path);
-        console.log(realPath);
-        res.status(200).send({
-            file: req.file,
-            path: realPath
+    router.post('/fileupload', (req, res, next) => {
+        upload(req, res, function(err) {
+            if (err) {
+                return res.end("Error uploading file.");
+            }
+            console.log(req.file);
+            var realpath = path.join(__dirname, req.file.path);
+
+            res.send({
+                file: req.file,
+                realpath: realpath
+            })
         });
     });
     return router;

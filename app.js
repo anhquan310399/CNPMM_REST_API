@@ -53,7 +53,7 @@ var upload = require("./src/controllers/uploadController")(app, router);
 app.use('/', upload);
 
 app.get('/download/:path', (req, res) => {
-    var realpath = path.join(__dirname, 'uploads/subject/NguyenAnhQuan.jpg');
+    var realpath = path.join(__dirname, 'uploads\\subject\\49c826a1d8e729b970f6.jpg');
     console.log(realpath);
     res.download(realpath);
 })
