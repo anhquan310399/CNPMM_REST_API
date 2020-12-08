@@ -9,4 +9,6 @@ router.post('/', userController.create);
 router.post('/login', userController.login);
 router.put('/:id', authLogin, userController.update);
 router.delete('/:id', authLogin, userController.delete);
+
+router.post('/upload', userController.upload);
 module.exports = router;

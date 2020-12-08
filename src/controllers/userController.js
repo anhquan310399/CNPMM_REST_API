@@ -131,3 +131,11 @@ exports.login = (req, res) => {
             res.send(err);
         })
 }
+
+exports.upload = (req, res) => {
+    console.log(req.file);
+    if (req.file) {
+        res.send({ message: "successfully!" })
+    }
+
+};

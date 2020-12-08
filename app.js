@@ -5,38 +5,22 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require("cors");
 const fileUpload = require('express-fileupload');
-
+var multer = require('multer');
+var router = express.Router();
 var usersRouter = require('./src/routes/userRouter');
-
+global.appRoot = path.resolve(__dirname);
 //Database
 const dbConfig = process.env.MONGODB_URL;
 const mongoose = require("mongoose");
+const { resolve } = require('path');
 
 var app = express();
 mongoose.Promise = global.Promise;
-//Set up muler
-var multer = require('multer');
-var storage = multer.diskStorage({
-    destination: function(req, file, cb) {
-        cb(null, './uploads/')
-    },
-    filename: function(req, file, cb) {
-        cb(null, file.originalname)
-    }
-})
-
-
-var upload = multer().single('file')
-
-//**THIS IS MANDATORY, WITHOUT THIS NOT WORK**
-app.use(multer({
-    storage: storage
-}).single('file'));
 
 // enable files upload
-app.use(fileUpload({
-    createParentPath: true,
-}));
+// app.use(fileUpload({
+//     createParentPath: true,
+// }));
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -64,22 +48,13 @@ mongoose
     });
 
 app.use('/user', usersRouter);
+var upload = require("./src/controllers/uploadController")(app, router);
 
-app.post('/upload', (req, res) => {
-    console.log(req.file);
-    upload(req, res, function(err) {
-        if (err) {
-            res.status(500).json({ 'success': false });
-            return;
-        }
-        res.send(req.file);
-    });
-
-});
+app.use('/', upload);
 
 app.get('/download/:path', (req, res) => {
     console.log(req.params.path);
-    var path = __dirname + '/uploads/' + req.params.path;
+    var path = __dirname + '\\uploads\\subject\\NguyenAnhQuan.jpg';
     res.download(path);
 })
 
