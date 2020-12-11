@@ -1,25 +1,46 @@
-const jwt = require('jsonwebtoken')
+const passport = require('passport');
 const User = require('../models/user')
-exports.authLogin = (req, res, next) => {
-    try {
-        const token = req.header('Authorization').replace('Bearer ', '')
-        const data = jwt.verify(token, process.env.JWT_KEY)
-        User.findOne({ _id: data._id, 'tokens.token': token })
+
+
+const JwtStrategy = require('passport-jwt').Strategy;
+const ExtractJWT = require('passport-jwt').ExtractJwt;
+
+const CLIENT_GOOGLE_KEY = "505292012597-p84up3smu19108foes5un0lhk4ig1sp2.apps.googleusercontent.com";
+const CLIENT_GOOGLE_SECRET_KEY = 'ErnfVUgh-hXu0QeXG2fYgKeB';
+
+const { OAuth2Client } = require('google-auth-library');
+
+var opts = {
+    jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
+    secretOrKey: process.env.JWT_KEY
+}
+
+passport.use(
+    'login-token',
+    new JwtStrategy(opts, (token, done) => {
+        console.log("Token " + JSON.stringify(token));
+        User.findOne({ username: token.username }, 'name username password')
             .then((user) => {
                 if (!user) {
-                    return res.status(401).send({
-                        message: "Please login"
-                    });
+                    return done(null, null, { message: 'Not found user' });
                 }
-                req.user = user;
-                next();
+                console.log(user);
+                done(null, user);
             })
-            .catch((err) => {
-                return res.status(401).send({
-                    message: "Not authorized to access this resource",
-                });
-            });
-    } catch (error) {
-        res.status(401).send({ message: 'Not authorized to access this resource' })
-    }
-}
+            .catch(err => {
+                return done(err);
+            })
+    })
+);
+
+
+
+passport.serializeUser(function(user, done) {
+    done(null, user);
+});
+
+passport.deserializeUser(function(user, done) {
+    done(null, user);
+});
+
+module.exports = passport;

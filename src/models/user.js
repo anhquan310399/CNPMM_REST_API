@@ -24,11 +24,7 @@ const UserSchema = mongoose.Schema({
             }
         }
     },
-    firstName: {
-        type: String,
-        required: true
-    },
-    surName: {
+    name: {
         type: String,
         required: true
     },
@@ -36,12 +32,12 @@ const UserSchema = mongoose.Schema({
         type: String,
         default: "http://simpleicon.com/wp-content/uploads/user1.png"
     },
-    tokens: [{
-        token: {
-            type: String,
-            required: true
-        }
-    }]
+    // tokens: [{
+    //     token: {
+    //         type: String,
+    //         required: true
+    //     }
+    // }]
 });
 
 const saltRounds = 10;
@@ -66,13 +62,18 @@ UserSchema.methods.comparePassword = function(password) {
     return bcrypt.compareSync(password, user.password);
 };
 
-UserSchema.methods.generateAuthToken = async function() {
+UserSchema.methods.generateAuthToken = function() {
     // Generate an auth token for the user
-    const user = this
-    const token = jwt.sign({ _id: user._id }, process.env.JWT_KEY)
-    user.tokens = user.tokens.concat({ token })
-    await user.save()
-    return token
+    const user = this;
+    const token = jwt.sign({
+        name: user.name,
+        username: user.username
+    }, process.env.JWT_KEY, {
+        expiresIn: '24h'
+    });
+    // user.tokens = user.tokens.concat({ token })
+    // await user.save()
+    return token;
 }
 
 module.exports = mongoose.model("user", UserSchema);

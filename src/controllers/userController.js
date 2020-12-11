@@ -1,32 +1,33 @@
+const { token } = require("morgan");
 const dbUser = require("../models/user");
+const jwt = require('jsonwebtoken');
 
 exports.create = (req, res) => {
     const user = new dbUser({
         emailAddress: req.body.emailAddress,
         username: req.body.username,
         password: req.body.password,
-        firstName: req.body.firstName,
-        surName: req.body.surName,
+        name: req.body.name,
         urlAvatar: req.body.urlAvatar
     });
 
     user.save()
         .then(function(data) {
-            user.generateAuthToken();
-            res.send(data);
+            // user.generateAuthToken();
+            res.json(data);
         })
         .catch((err) => {
             if (err.code == 11000)
                 return res.json({ success: false, message: 'A user with that username already exists. ' });
             else
-                return res.send(err);
+                return res.json(err);
         });
 };
 
 exports.findAll = (req, res) => {
     dbUser.find()
-        .then((user) => {
-            res.send(user);
+        .then((users) => {
+            res.send(users);
         })
         .catch((err) => {
             res.status(500).send({
@@ -36,7 +37,7 @@ exports.findAll = (req, res) => {
 };
 
 exports.findUser = (req, res) => {
-    dbUser.findById(req.params.id)
+    dbUser.findOne({ username: req.params.username })
         .then((user) => {
             if (!user) {
                 return res.status(404).send({
@@ -111,31 +112,43 @@ exports.delete = (req, res) => {
         });
 };
 
-exports.login = (req, res) => {
-    var user = {
-        username: req.body.username,
-        password: req.body.password
-    }
-    dbUser.findOne({ username: user.username })
-        .then(data => {
-            if (!data) {
-                return res.json({ message: 'Not found username' });
-            }
-            if (data.comparePassword(user.password)) {
-                res.send(data);
-            } else {
-                return res.json({ message: 'Password Incorrect!' });
+exports.authenticate = (req, res) => {
+    dbUser.findOne({ username: req.body.username })
+        .then(user => {
+            console.log(user);
+            if (!user) {
+                return res.json({
+                    success: false,
+                    message: 'Authentication failed. User not found'
+                });
+            } else if (user) {
+                var validPassword = user.comparePassword(req.body.password);
+                if (!validPassword) {
+                    return res.json({
+                        success: false,
+                        message: 'Authentication failed. Wrong password!'
+                    });
+                } else {
+                    let superSecret = process.env.JWT_KEY;
+                    let token = jwt.sign({
+                        name: user.emailAddress,
+                        username: user.username
+                    }, superSecret, {
+                        expiresIn: '20h'
+                    });
+                    console.log(token);
+                    res.json({
+                        success: false,
+                        message: 'Login successfully!',
+                        token: token
+                    })
+                }
             }
         })
         .catch(err => {
-            res.send(err);
+            res.json({
+                success: false,
+                message: err.message
+            })
         })
 }
-
-exports.upload = (req, res) => {
-    console.log(req.file);
-    if (req.file) {
-        res.send({ message: "successfully!" })
-    }
-
-};

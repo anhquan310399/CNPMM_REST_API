@@ -4,11 +4,10 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require("cors");
-const fileUpload = require('express-fileupload');
-var multer = require('multer');
-var router = express.Router();
+var passport = require('passport');
 var usersRouter = require('./src/routes/userRouter');
-global.appRoot = path.resolve(__dirname);
+
+
 //Database
 const dbConfig = process.env.MONGODB_URL;
 const mongoose = require("mongoose");
@@ -24,7 +23,8 @@ mongoose.Promise = global.Promise;
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
-app.use(express.static(path.join(__dirname, 'uploads')));
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(cors());
 app.use(logger('dev'));
 app.use(express.json());
@@ -48,15 +48,6 @@ mongoose
     });
 
 app.use('/user', usersRouter);
-var upload = require("./src/controllers/uploadController")(app, router);
-
-app.use('/', upload);
-
-app.get('/download/:path', (req, res) => {
-    var realpath = path.join(__dirname, 'uploads\\subject\\49c826a1d8e729b970f6.jpg');
-    console.log(realpath);
-    res.download(realpath);
-})
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
