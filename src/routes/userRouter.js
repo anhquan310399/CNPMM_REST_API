@@ -25,7 +25,9 @@ router.get('/auth/google/callback',
 );
 
 router.get('/auth/google/failure', function(req, res) {
-    console.log(req.user);
-    res.json({ message: "Thất bại!" })
+    return res.json({
+        success: false,
+        message: 'Google Login Api Failed!'
+    });
 });
 module.exports = router;

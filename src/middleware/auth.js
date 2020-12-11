@@ -38,7 +38,7 @@ passport.use(
     new GoogleStrategy({
             clientID: CLIENT_GOOGLE_KEY,
             clientSecret: CLIENT_GOOGLE_SECRET_KEY,
-            callbackURL: "http://localhost:3000/user/auth/google/callback",
+            callbackURL: "/user/auth/google/callback",
             passReqToCallback: true
         },
         function(request, accessToken, refreshToken, profile, done) {
