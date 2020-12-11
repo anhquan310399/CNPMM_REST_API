@@ -10,4 +10,22 @@ router.post('/authenticate', userController.authenticate);
 router.put('/:id', userController.update);
 router.delete('/:id', userController.delete);
 
+
+
+router.get('/auth/google',
+    Oauth.authenticate('google', {
+        scope: ['email', 'profile']
+    }));
+
+router.get('/auth/google/callback',
+    Oauth.authenticate('google', {
+        failureRedirect: '/user/auth/google/failure'
+    }),
+    userController.authenticateByGoogle
+);
+
+router.get('/auth/google/failure', function(req, res) {
+    console.log(req.user);
+    res.json({ message: "Thất bại!" })
+});
 module.exports = router;

@@ -7,7 +7,7 @@ var cors = require("cors");
 var passport = require('passport');
 var usersRouter = require('./src/routes/userRouter');
 
-
+var cookieSession = require('cookie-session');
 //Database
 const dbConfig = process.env.MONGODB_URL;
 const mongoose = require("mongoose");
@@ -22,7 +22,11 @@ mongoose.Promise = global.Promise;
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
-
+app.use(cookieSession({
+    // milliseconds of a day
+    maxAge: 24 * 60 * 60 * 1000,
+    keys: [process.env.HCMUTEUnversityHCMC]
+}));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(cors());

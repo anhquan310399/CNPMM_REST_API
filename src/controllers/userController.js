@@ -138,11 +138,46 @@ exports.authenticate = (req, res) => {
                     });
                     console.log(token);
                     res.json({
-                        success: false,
+                        success: true,
                         message: 'Login successfully!',
                         token: token
                     })
                 }
+            }
+        })
+        .catch(err => {
+            res.json({
+                success: false,
+                message: err.message
+            })
+        })
+}
+
+exports.authenticateByGoogle = (req, res) => {
+    dbUser.findById(req.user._id)
+        .then(user => {
+            console.log(user);
+            if (!user) {
+                return res.json({
+                    success: false,
+                    message: 'Authentication failed. User not found'
+                });
+            } else if (user) {
+
+                let superSecret = process.env.JWT_KEY;
+                let token = jwt.sign({
+                    name: user.emailAddress,
+                    username: user.username
+                }, superSecret, {
+                    expiresIn: '20h'
+                });
+                console.log(token);
+                res.json({
+                    success: true,
+                    message: 'Login successfully!',
+                    token: token
+                })
+
             }
         })
         .catch(err => {
