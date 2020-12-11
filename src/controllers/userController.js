@@ -153,7 +153,7 @@ exports.authenticate = (req, res) => {
         })
 }
 
-exports.authenticateByGoogle = (req, res) => {
+exports.authenticateBySocial = (req, res) => {
     dbUser.findById(req.user._id)
         .then(user => {
             console.log(user);

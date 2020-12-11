@@ -17,11 +17,23 @@ router.get('/auth/google',
         scope: ['email', 'profile']
     }));
 
+router.get('/auth/facebook',
+    Oauth.authenticate('facebook', {
+        scope: 'email'
+    }));
+
 router.get('/auth/google/callback',
     Oauth.authenticate('google', {
         failureRedirect: '/user/auth/google/failure'
     }),
-    userController.authenticateByGoogle
+    userController.authenticateBySocial
+);
+
+router.get('/auth/facebook/callback',
+    Oauth.authenticate('facebook', {
+        failureRedirect: '/user/auth/google/failure'
+    }),
+    userController.authenticateBySocial
 );
 
 router.get('/auth/google/failure', function(req, res) {
