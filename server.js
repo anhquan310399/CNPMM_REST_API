@@ -5,14 +5,13 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require("cors");
 var passport = require('passport');
-var usersRouter = require('./src/routes/userRouter');
-
 var cookieSession = require('cookie-session');
+
 //Database
 const dbConfig = process.env.MONGODB_URL;
 const mongoose = require("mongoose");
 
-var app = express();
+var server = express();
 mongoose.Promise = global.Promise;
 
 // enable files upload
@@ -20,22 +19,21 @@ mongoose.Promise = global.Promise;
 //     createParentPath: true,
 // }));
 
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
-app.use(cookieSession({
+server.set('views', path.join(__dirname, 'public/app/views'));
+server.set('view engine', 'jade');
+server.use(cookieSession({
     // milliseconds of a day
     maxAge: 24 * 60 * 60 * 1000,
     keys: [process.env.HCMUTEUnversityHCMC]
 }));
-app.use(passport.initialize());
-app.use(passport.session());
-app.use(cors());
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-//Firebase 
+server.use(passport.initialize());
+server.use(passport.session());
+server.use(cors());
+server.use(logger('dev'));
+server.use(express.json());
+server.use(express.urlencoded({ extended: false }));
+server.use(cookieParser());
+server.use(express.static(path.join(__dirname, 'public')));
 
 // Connecting to the database
 mongoose
@@ -51,15 +49,21 @@ mongoose
         process.exit();
     });
 
-app.use('/user', usersRouter);
+//API ROUTES
+var usersRouter = require('./src/routes/userRouter');
+var privilegeRouter = require('./src/routes/privilegeRouter');
+server.use('/user', usersRouter);
+server.use('/privilege', privilegeRouter);
+
+
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+server.use(function(req, res, next) {
     next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+server.use(function(err, req, res, next) {
     // set locals, only providing error in development
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
@@ -69,4 +73,4 @@ app.use(function(err, req, res, next) {
     res.render('error');
 });
 
-module.exports = app;
+module.exports = server;

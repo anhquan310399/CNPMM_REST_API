@@ -1,187 +1,320 @@
-const { token } = require("morgan");
 const dbUser = require("../models/user");
-const jwt = require('jsonwebtoken');
 
 exports.create = (req, res) => {
     const user = new dbUser({
+        code: req.body.code,
+        idPrivilege: req.body.idPrivilege,
         emailAddress: req.body.emailAddress,
-        username: req.body.username,
-        password: req.body.password,
-        name: req.body.name,
-        urlAvatar: req.body.urlAvatar
+        firstName: req.body.firstName,
+        surName: req.body.surName
     });
-
     user.save()
-        .then(function(data) {
+        .then((data) => {
             // user.generateAuthToken();
-            res.json(data);
+            res.send(data);
         })
         .catch((err) => {
-            if (err.code == 11000)
-                return res.json({ success: false, message: 'A user with that username already exists. ' });
-            else
-                return res.json(err);
+            if (err.code === 11000) {
+                return res.status(400).send({
+                    success: false,
+                    message: `Duplicate ${Object.keys(err.keyValue).toString()}`,
+                });
+            }
+            console.log(err.name);
+            if (err.name === 'ValidationError') {
+                const key = Object.keys(err.errors)[0];
+                res.status(400).send({
+                    success: false,
+                    message: err.errors[key].message,
+                });
+            } else {
+                res.status(500).send({
+                    success: false,
+                    message: err.message,
+                });
+            }
         });
 };
 
 exports.findAll = (req, res) => {
     dbUser.find()
-        .then((users) => {
-            res.send(users);
+        .then((user) => {
+            res.send(user);
         })
         .catch((err) => {
             res.status(500).send({
+                success: false,
                 message: err.message || "Some error occurred while retrieving users.",
             });
         });
 };
 
 exports.findUser = (req, res) => {
-    dbUser.findOne({ username: req.params.username })
+    dbUser.findOne({ code: req.params.code })
         .then((user) => {
             if (!user) {
                 return res.status(404).send({
-                    message: "Not found",
+                    success: false,
+                    message: "Not found user",
                 });
             }
-            res.send(user);
+            var re = {
+                _id: user._id,
+                code: user.code,
+                emailAddress: user.emailAddress,
+                firstName: user.firstName,
+                surName: user.surName,
+                urlAvatar: user.urlAvatar
+            }
+            res.send(re);
         })
         .catch((err) => {
+            if (err.kind === "ObjectId") {
+                return res.status(404).send({
+                    success: false,
+                    message: "Cast to ObjectId failed",
+                });
+            }
             return res.status(500).send({
-                message: err.message,
+                success: false,
+                message: "Error retrieving user",
             });
         });
 };
 
 exports.update = (req, res) => {
-
-    var id = req.user._id;
-    if (id != req.params.id) {
-        return res.send({ message: 'Not authorized to update user' });
-    }
-
-    dbUser.findById(req.params.id)
+    // Find ads and update it with the request body
+    dbUser.findByIdAndUpdate(
+            req.params.id, {
+                firstName: req.body.firstName,
+                surName: req.body.surName,
+            }
+        )
         .then((user) => {
             if (!user) {
                 return res.status(404).send({
-                    message: "Not found",
+                    success: false,
+                    message: "Not found user",
                 });
             }
-            if (req.body.emailAddress) user.emailAddress = req.body.emailAddress;
-            if (req.body.username) user.username = req.body.username;
-            if (req.body.password) user.password = req.body.password;
-            if (req.body.firstName) user.password = req.body.firstName;
-            if (req.body.surName) user.password = req.body.surName;
-            if (req.body.urlAvatar) user.password = req.body.urlAvatar;
-
-
-            user.save(function(err) {
-                if (err) return res.send(err);
-
-                // return a message
-                res.json({ message: 'User updated!' });
-            });
+            res.send(user);
         })
         .catch((err) => {
+            if (err.kind === "ObjectId") {
+                return res.status(404).send({
+                    success: false,
+                    message: "Not found user",
+                });
+            }
             return res.status(500).send({
-                message: err.message,
+                success: false,
+                message: "Error updating user",
             });
         });
 };
 
 exports.delete = (req, res) => {
-
-    var id = req.user._id;
-    if (id != req.params.id) {
-        return res.send({ message: 'Not authorized to delete user' });
-    }
-
     dbUser.findByIdAndRemove(req.params.id)
         .then((user) => {
             if (!user) {
                 return res.status(404).send({
-                    message: "Not found",
+                    success: false,
+                    message: "Not found user",
                 });
             }
-            res.send({ message: "Delete successfully!" });
+            res.send({
+                success: true,
+                message: "Delete successfully!"
+            });
         })
         .catch((err) => {
+            if (err.kind === "ObjectId" || err.name === "NotFound") {
+                return res.status(404).send({
+                    success: false,
+                    message: "Not found user",
+                });
+            }
             return res.status(500).send({
-                message: err.message,
+                success: false,
+                message: "Could not delete user",
             });
         });
 };
 
 exports.authenticate = (req, res) => {
-    dbUser.findOne({ username: req.body.username })
+    dbUser.findOne({ code: req.body.code })
         .then(user => {
-            console.log(user);
             if (!user) {
-                return res.json({
+                return res.status(404).send({
                     success: false,
                     message: 'Authentication failed. User not found'
                 });
-            } else if (user) {
+            } else {
                 var validPassword = user.comparePassword(req.body.password);
                 if (!validPassword) {
-                    return res.json({
+                    return res.status(400).send({
                         success: false,
                         message: 'Authentication failed. Wrong password!'
                     });
                 } else {
-                    let superSecret = process.env.JWT_KEY;
-                    let token = jwt.sign({
-                        name: user.emailAddress,
-                        username: user.username
-                    }, superSecret, {
-                        expiresIn: '20h'
-                    });
-                    console.log(token);
-                    res.json({
+                    let token = user.generateAuthToken();
+                    res.send({
                         success: true,
                         message: 'Login successfully!',
+                        idPrivilege: user.idPrivilege,
+                        type: 'authenticate',
                         token: token
                     })
                 }
             }
         })
         .catch(err => {
-            res.json({
+            res.status(500).send({
                 success: false,
                 message: err.message
             })
         })
 }
 
-exports.authenticateBySocial = (req, res) => {
-    dbUser.findById(req.user._id)
-        .then(user => {
-            console.log(user);
-            if (!user) {
-                return res.json({
-                    success: false,
-                    message: 'Authentication failed. User not found'
-                });
-            } else if (user) {
+exports.getInfo = (req, res) => {
+    var user = req.user;
+    var info = {
+        _id: user._id,
+        code: user.code,
+        emailAddress: user.emailAddress,
+        firstName: user.firstName,
+        surName: user.surName,
+        urlAvatar: user.urlAvatar
+    }
+    res.send(info);
+}
 
-                let superSecret = process.env.JWT_KEY;
-                let token = jwt.sign({
-                    name: user.emailAddress,
-                    username: user.username
-                }, superSecret, {
-                    expiresIn: '20h'
-                });
-                console.log(token);
-                res.json({
-                    success: true,
-                    message: 'Login successfully!',
-                    token: token
-                })
+const { verifyGoogle } = require('../authenticate/authGoogle');
 
-            }
+exports.authenticateGoogleToken = async(req, res) => {
+    const userToken = req.body.token
+    verifyGoogle(userToken).then(async function(result) {
+        var userEmail = result.email
+        const user = await dbUser.findOne({ emailAddress: userEmail })
+            .then(user => { return user });
+        if (!user) {
+            return res.status(404).send({
+                success: false,
+                message: `Not found user ${userEmail}`
+            })
+        }
+        const token = user.generateAuthToken();
+        res.send({
+            success: true,
+            message: 'Login successfully!',
+            idPrivilege: user.idPrivilege,
+            type: 'google',
+            token: token
         })
-        .catch(err => {
-            res.json({
+    }).catch(function(err) {
+        res.status(500).send({
+            success: false,
+            message: err.message
+        })
+    })
+}
+
+const { verifyFacebook } = require('../authenticate/authFacebook');
+
+exports.authenticateFacebookToken = async(req, res) => {
+    const userToken = req.body.token
+    verifyFacebook(userToken).then(async function(result) {
+        if (!result) {
+            res.status(500).send({
+                success: false,
+                message: 'Error while verify facebook access token'
+            })
+        }
+        let facebookId = result.id;
+        const user = await dbUser.findOne({ facebookId: facebookId })
+            .then(user => { return user });
+        if (!user) {
+            return res.status(404).send({
+                success: false,
+                message: `Not found user with this facebook`
+            })
+        }
+        const token = user.generateAuthToken();
+        res.send({
+            success: true,
+            message: 'Login successfully!',
+            idPrivilege: user.idPrivilege,
+            type: 'facebook',
+            token: token
+        })
+    }).catch(function(err) {
+        res.status(500).send({
+            success: false,
+            message: err.message
+        })
+    })
+}
+
+exports.linkFacebookAccount = async(req, res) => {
+    const userToken = req.body.token
+    if (req.user.facebookId) {
+        res.status(409).send({
+            success: false,
+            message: 'Your account has already linked facebook account!'
+        })
+    }
+    verifyFacebook(userToken).then(async function(result) {
+        if (!result) {
+            res.status(500).send({
+                success: false,
+                message: 'Error while verify facebook access token'
+            })
+        }
+        var facebookId = result.id;
+        let fbUser = await dbUser.findOne({ facebookId: facebookId })
+            .then(user => { return user });
+        if (fbUser) {
+            res.status(409).send({
+                success: false,
+                message: 'This facebook account is linked with another account!'
+            })
+        }
+
+        let user = req.user
+        user.facebookId = facebookId;
+        user.save()
+            .then(() => {
+                res.send({
+                    success: true,
+                    message: `Link to facebook ${result.name} successfully!`
+                })
+            })
+
+    }).catch(function(err) {
+        res.status(500).send({
+            success: false,
+            message: err.message
+        })
+    })
+}
+
+exports.unlinkFacebookAccount = async(req, res) => {
+    let user = req.user;
+    if (!user.facebookId) {
+        res.status(409).send({
+            success: false,
+            message: `Your account hasn't already linked facebook!`
+        })
+    }
+    user.facebookId = null;
+    user.save()
+        .then(() => {
+            res.send({
+                success: true,
+                message: `UnLink to facebook successfully!`
+            })
+        }).catch(function(err) {
+            res.status(500).send({
                 success: false,
                 message: err.message
             })
