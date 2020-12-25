@@ -301,7 +301,8 @@ exports.linkFacebookAccount = async(req, res) => {
         if (fbUser) {
             res.status(409).send({
                 success: false,
-                message: 'This facebook account is linked with another account!'
+                message: 'This facebook account is linked with another account!',
+                facebookId: facebookId
             })
         }
 
