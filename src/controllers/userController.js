@@ -97,7 +97,10 @@ exports.update = (req, res) => {
                     message: "Not found user",
                 });
             }
-            res.send(user);
+            res.send({
+                success: true,
+                message: `Update user with code : ${user.code} successfully!`
+            });
         })
         .catch((err) => {
             if (err.kind === "ObjectId") {
@@ -106,10 +109,18 @@ exports.update = (req, res) => {
                     message: "Not found user",
                 });
             }
-            return res.status(500).send({
-                success: false,
-                message: "Error updating user",
-            });
+            if (err.name === 'ValidationError') {
+                const key = Object.keys(err.errors)[0];
+                res.status(400).send({
+                    success: false,
+                    message: err.errors[key].message,
+                });
+            } else {
+                res.status(500).send({
+                    success: false,
+                    message: err.message,
+                });
+            }
         });
 };
 
@@ -181,6 +192,7 @@ exports.getInfo = (req, res) => {
     var info = {
         _id: user._id,
         code: user.code,
+        idPrivilege: user.idPrivilege,
         emailAddress: user.emailAddress,
         firstName: user.firstName,
         surName: user.surName,

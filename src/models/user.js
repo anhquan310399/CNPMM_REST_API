@@ -40,7 +40,7 @@ const UserSchema = mongoose.Schema({
         lowercase: true,
         validate: function(value) {
             console.log(this.idPrivilege);
-            if (this.idPrivilege != 'admin') {
+            if (this.idPrivilege === 'student') {
                 if (!validator.isEmail(value)) {
                     throw new ValidatorError({ message: 'Invalid Email address', type: 'validate', path: 'emailAddress' });
                 } else if (!value.split('@').pop().includes('hcmute.edu.vn')) {
