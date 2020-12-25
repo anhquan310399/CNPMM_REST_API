@@ -46,6 +46,8 @@ const UserSchema = mongoose.Schema({
                 } else if (!value.split('@').pop().includes('hcmute.edu.vn')) {
                     throw new ValidatorError({ message: 'Email address not in HCMUTE', type: 'validate', path: 'emailAddress' });
                 }
+            } else {
+                return true;
             }
         }
     },
