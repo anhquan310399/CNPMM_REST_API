@@ -185,9 +185,17 @@ exports.authenticate = (req, res) => {
                     res.send({
                         success: true,
                         message: 'Login successfully!',
-                        idPrivilege: user.idPrivilege,
                         type: 'authenticate',
-                        token: token
+                        token: token,
+                        user: {
+                            _id: user._id,
+                            code: user.code,
+                            idPrivilege: user.idPrivilege,
+                            emailAddress: user.emailAddress,
+                            firstName: user.firstName,
+                            surName: user.surName,
+                            urlAvatar: user.urlAvatar
+                        }
                     })
                 }
             }
