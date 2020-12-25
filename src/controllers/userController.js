@@ -209,7 +209,8 @@ exports.getInfo = (req, res) => {
         emailAddress: user.emailAddress,
         firstName: user.firstName,
         surName: user.surName,
-        urlAvatar: user.urlAvatar
+        urlAvatar: user.urlAvatar,
+        facebookId: user.facebookId
     }
     res.send(info);
 }
