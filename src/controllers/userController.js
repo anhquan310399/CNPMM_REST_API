@@ -49,6 +49,19 @@ exports.findAll = (req, res) => {
         });
 };
 
+exports.findAllStudent = (req, res) => {
+    dbUser.find({ idPrivilege: 'student' })
+        .then((user) => {
+            res.send(user);
+        })
+        .catch((err) => {
+            res.status(500).send({
+                success: false,
+                message: err.message || "Some error occurred while retrieving users.",
+            });
+        });
+};
+
 exports.findUser = (req, res) => {
     dbUser.findOne({ code: req.params.code })
         .then((user) => {

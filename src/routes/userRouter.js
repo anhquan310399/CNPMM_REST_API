@@ -9,6 +9,7 @@ router.get('/info', authLogin, userController.getInfo);
 router.get('/:code', userController.findUser);
 
 router.get('/', authAdmin, userController.findAll);
+router.get('/students', authAdmin, userController.findAllStudent);
 
 router.post('/', authAdmin, userController.create);
 
