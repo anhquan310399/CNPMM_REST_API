@@ -194,7 +194,8 @@ exports.authenticate = (req, res) => {
                             emailAddress: user.emailAddress,
                             firstName: user.firstName,
                             surName: user.surName,
-                            urlAvatar: user.urlAvatar
+                            urlAvatar: user.urlAvatar,
+                            facebookId: user.facebookId
                         }
                     })
                 }
@@ -241,7 +242,16 @@ exports.authenticateGoogleToken = async(req, res) => {
         res.send({
             success: true,
             message: 'Login successfully!',
-            idPrivilege: user.idPrivilege,
+            user: {
+                _id: user._id,
+                code: user.code,
+                idPrivilege: user.idPrivilege,
+                emailAddress: user.emailAddress,
+                firstName: user.firstName,
+                surName: user.surName,
+                urlAvatar: user.urlAvatar,
+                facebookId: user.facebookId
+            },
             type: 'google',
             token: token
         })
@@ -277,7 +287,16 @@ exports.authenticateFacebookToken = async(req, res) => {
         res.send({
             success: true,
             message: 'Login successfully!',
-            idPrivilege: user.idPrivilege,
+            user: {
+                _id: user._id,
+                code: user.code,
+                idPrivilege: user.idPrivilege,
+                emailAddress: user.emailAddress,
+                firstName: user.firstName,
+                surName: user.surName,
+                urlAvatar: user.urlAvatar,
+                facebookId: user.facebookId
+            },
             type: 'facebook',
             token: token
         })
